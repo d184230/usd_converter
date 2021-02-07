@@ -4,15 +4,17 @@ from urllib import parse
 from urllib.error import HTTPError
 
 from config import CONFIG
-from utils import get_money_rate_from_cb, UtilsError
+from utils import get_money_rate_from_cb, UtilsError, log
 
 
 class server_handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """ Обработка get запросов """
+        log('new request')
         q = parse.parse_qs(parse.urlparse(self.path).query)
         value_usd_list = q.get('value')
         # Проверка на наличие параметра value
+        log('check param value')
         if not value_usd_list:
             status_code = 400
             data_json = {'status': 'error', 'error': 'param value not found'}
@@ -20,6 +22,7 @@ class server_handler(BaseHTTPRequestHandler):
             return
 
         # Проверка на тип параметра
+        log('check param value type')
         try:
             value_usd = float(value_usd_list[0].replace(',', '.'))
         except ValueError:
@@ -29,6 +32,7 @@ class server_handler(BaseHTTPRequestHandler):
             return
 
         # Получение текущего курса
+        log('get current usd rate')
         try:
             usd_rate = get_money_rate_from_cb('USD')
         except HTTPError:
@@ -42,11 +46,13 @@ class server_handler(BaseHTTPRequestHandler):
             self.send_response_to_user(status_code, data_json)
             return
 
+        log('calc value out')
         value_rub = round(value_usd * usd_rate, 2)
         data_json = {'status': 'ok', 'currency_in': 'usd', 'value_in': value_usd,
                      'currency_out': 'rub', 'value_out': value_rub}
         status_code = 200
         self.send_response_to_user(status_code, data_json)
+        log('request-ok')
 
     def send_response_to_user(self, status_code: int, data_json: dict) -> None:
         """

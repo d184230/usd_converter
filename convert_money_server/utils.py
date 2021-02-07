@@ -1,11 +1,13 @@
 import re
-from datetime import date
+from datetime import date, datetime
 from urllib import parse, request
+
 from config import CONFIG
 
 
 class UtilsError(Exception):
     """ Ошибки в модуле utils.py """
+
     def __init__(self, text):
         self.txt = text
 
@@ -42,3 +44,12 @@ def get_money_rate_from_cb(money_code: str, dt: date = date.today()) -> float:
     except ValueError:
         raise UtilsError('Rate value is error')
     return usd_rate
+
+
+def log(text: str) -> None:
+    """
+    Логирование в stdout c указанием метки времени
+    :param text: str Текст для логирования
+    :return: None
+    """
+    print('{} - {}'.format(datetime.now(), text))
